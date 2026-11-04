@@ -60,7 +60,7 @@
 
             <div class="actions-row">
                 <input type="text" id="search-input" placeholder="Buscar por nombre de cliente..." class="search-input">
-                <button id="create-user-btn" class="btn btn-primary">Nueva Licencia</button>
+                <button id="create-user-btn" class="btn btn-primary">➕ Nueva Licencia</button>
             </div>
 
             <div class="filter-tabs">
@@ -102,56 +102,77 @@
                     <input type="text" id="user-password" required placeholder="contraseña">
                 </div>
 
+                <!-- Selector de Tipo de Licencia -->
                 <div class="form-group">
-                    <label>Duración</label>
-                    <div class="duration-inputs">
-                        <input type="number" id="user-duration-num" value="30" min="1">
-                        <select id="user-duration-unit">
-                            <option value="minutos">Minutos</option>
-                            <option value="horas">Horas</option>
-                            <option value="días" selected>Días</option>
-                            <option value="meses">Meses</option>
-                        </select>
-                    </div>
-                    <p id="duration-preview-text" class="duration-preview">30 días</p>
-
-                    <div class="preset-chips">
-                        <button type="button" class="preset-chip" data-num="30" data-unit="días">30 días</button>
-                        <button type="button" class="preset-chip" data-num="7" data-unit="días">7 días</button>
-                        <button type="button" class="preset-chip" data-num="1" data-unit="meses">1 mes</button>
-                        <button type="button" class="preset-chip" data-num="10" data-unit="minutos" data-schedule="true">10 min (test)</button>
+                    <label>Tipo de Licencia</label>
+                    <div class="license-type-selector">
+                        <label class="license-type-card active" id="card-type-test">
+                            <input type="radio" name="license-type-radio" id="radio-type-test" value="test" checked>
+                            <div class="type-card-content">
+                                <span class="type-icon">⚡</span>
+                                <strong>Prueba 15 Minutos</strong>
+                                <small>Sin horario, activa por 15 min</small>
+                            </div>
+                        </label>
+                        <label class="license-type-card" id="card-type-schedule">
+                            <input type="radio" name="license-type-radio" id="radio-type-schedule" value="schedule">
+                            <div class="type-card-content">
+                                <span class="type-icon">📅</span>
+                                <strong>Exámenes Programados</strong>
+                                <small>Por fecha y horas exactas</small>
+                            </div>
+                        </label>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label>
-                        <input type="checkbox" id="user-require-schedule" checked>
-                        Configurar horario de clases
-                    </label>
+                <!-- Opción 1: Info Prueba 15 min -->
+                <div id="test-info-box" class="info-callout">
+                    <p>⚡ <strong>Prueba Rápida de 15 Minutos</strong></p>
+                    <small>La licencia se activa al instante y es válida por 15 minutos sin restricción de días ni horas.</small>
                 </div>
 
-                <div id="schedule-group" class="schedule-group">
-                    <div class="schedule-header">
-                        <h3>Horario de Clases</h3>
-                        <button type="button" id="clear-user-schedule" class="btn btn-small btn-secondary">Limpiar</button>
+                <!-- Opción 2: Horario de Clases -->
+                <div id="schedule-quizzes-section" class="schedule-quizzes-section hidden">
+                    <div class="quiz-creator-box">
+                        <div class="quiz-box-header">
+                            <h3>📅 Horario de Clases</h3>
+                            <small class="quiz-hint">Llena la tabla con las materias de cada día. El horario se repite semanalmente. Las vibraciones funcionarán automáticamente <strong>5 minutos antes</strong> y hasta <strong>15 minutos después</strong> de cada hora programada.</small>
+                        </div>
+
+                        <div class="schedule-table-container">
+                            <table class="schedule-table" id="schedule-table">
+                                <thead>
+                                    <tr>
+                                        <th>Horario</th>
+                                        <th>Lunes</th>
+                                        <th>Martes</th>
+                                        <th>Miércoles</th>
+                                        <th>Jueves</th>
+                                        <th>Viernes</th>
+                                        <th>Sábado</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="schedule-table-body">
+                                    <!-- Se llena dinámicamente con JS -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="schedule-actions">
+                            <button type="button" id="btn-clear-schedule" class="btn btn-secondary">Limpiar Horario</button>
+                            <button type="button" id="btn-generate-quizzes" class="btn btn-primary">Generar Horario</button>
+                        </div>
                     </div>
-                    <div class="schedule-table-container">
-                        <table id="user-schedule-table">
-                            <thead>
-                                <tr>
-                                    <th>Hora</th>
-                                    <th>Lun</th>
-                                    <th>Mar</th>
-                                    <th>Mié</th>
-                                    <th>Jue</th>
-                                    <th>Vie</th>
-                                    <th>Sáb</th>
-                                </tr>
-                            </thead>
-                            <tbody id="user-schedule-body">
-                                <!-- Se llena dinámicamente -->
-                            </tbody>
-                        </table>
+
+                    <!-- Lista de Horario -->
+                    <div class="scheduled-quizzes-container">
+                        <div class="quizzes-header">
+                            <h4>Horario Semanal (<span id="quizzes-count">0</span> clases)</h4>
+                            <small>El horario se repite cada semana</small>
+                        </div>
+                        <div id="quizzes-list" class="quizzes-list">
+                            <p class="no-quizzes-msg" id="no-quizzes-msg">Llena la tabla de horario y haz clic en "Generar Horario".</p>
+                        </div>
                     </div>
                 </div>
 

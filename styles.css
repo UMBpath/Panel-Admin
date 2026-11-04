@@ -91,7 +91,7 @@ body {
     background: rgba(255, 255, 255, 0.1);
 }
 
-/* Botón blanco específico para licencias-admin */
+/* BotÃƒÂ³n blanco especÃƒÂ­fico para licencias-admin */
 .licencias-admin-btn {
     background: #fff;
     color: #000;
@@ -270,6 +270,30 @@ body {
 #create-user-btn {
     width: auto;
     white-space: nowrap;
+    background: #ffffff !important;
+    color: #000000 !important;
+    border: 1px solid #ffffff !important;
+    font-weight: 700 !important;
+    font-size: 14px !important;
+    padding: 12px 24px !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    transition: all 0.2s ease-in-out !important;
+    box-shadow: 0 4px 14px rgba(255, 255, 255, 0.3) !important;
+}
+
+#create-user-btn:hover {
+    background: #f0f0f0 !important;
+    color: #000000 !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(255, 255, 255, 0.45) !important;
+}
+
+#create-user-btn:active {
+    transform: translateY(0) !important;
 }
 
 /* Table */
@@ -533,6 +557,344 @@ tr:hover {
     text-align: center;
     background: white;
     color: #333;
+}
+
+/* ======================================================== */
+/* NUEVOS ESTILOS: SELECTOR DE TIPO DE LICENCIA Y QUIZES */
+/* ======================================================== */
+
+.license-type-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.license-type-card {
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    padding: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.2s ease;
+    background: #fafafa;
+}
+
+.license-type-card input[type="radio"] {
+    display: none;
+}
+
+.license-type-card.active {
+    border-color: #000;
+    background: #000;
+    color: #fff;
+}
+
+.license-type-card.active small {
+    color: #ccc;
+}
+
+.type-card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.type-icon {
+    font-size: 20px;
+    margin-bottom: 2px;
+}
+
+.type-card-content strong {
+    font-size: 14px;
+}
+
+.type-card-content small {
+    font-size: 11px;
+    color: #666;
+}
+
+/* Info Callout */
+.info-callout {
+    background: #f0f7ff;
+    border-left: 4px solid #3182ce;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    color: #2b6cb0;
+}
+
+.info-callout p {
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+
+.info-callout small {
+    color: #4a5568;
+    font-size: 12px;
+}
+
+/* Sección Quizes Programados */
+.schedule-quizzes-section {
+    margin-top: 15px;
+}
+
+.quiz-creator-box {
+    background: #f8f9fa;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 15px;
+}
+
+.quiz-box-header h3 {
+    font-size: 14px;
+    color: #1a202c;
+    margin-bottom: 4px;
+}
+
+.quiz-hint {
+    font-size: 11px;
+    color: #718096;
+    margin-bottom: 12px;
+}
+
+.quiz-inputs-row {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr;
+    gap: 10px;
+}
+
+.quiz-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.quiz-field label {
+    font-size: 12px;
+    color: #4a5568;
+    font-weight: 600;
+}
+
+.form-input {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #cbd5e0;
+    border-radius: 6px;
+    font-size: 13px;
+    background: #fff;
+    color: #2d3748;
+}
+
+.form-input:focus {
+    border-color: #000;
+    outline: none;
+}
+
+.margin-preview-box {
+    background: #fffaf0;
+    border: 1px dashed #dd6b20;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin-top: 12px;
+    font-size: 12px;
+    color: #c05621;
+}
+
+.btn-add-quiz {
+    margin-top: 12px;
+    width: 100%;
+    background: #000;
+    color: #fff;
+    border: none;
+    padding: 10px;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-add-quiz:hover {
+    background: #333;
+}
+
+/* Quizes List */
+.scheduled-quizzes-container {
+    margin-top: 15px;
+}
+
+.quizzes-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+}
+
+.quizzes-header h4 {
+    font-size: 13px;
+    color: #2d3748;
+}
+
+.quizzes-header small {
+    font-size: 11px;
+    color: #718096;
+}
+
+.quizzes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 180px;
+    overflow-y: auto;
+}
+
+.no-quizzes-msg {
+    text-align: center;
+    color: #a0aec0;
+    font-size: 12px;
+    padding: 15px;
+    border: 1px dashed #cbd5e0;
+    border-radius: 6px;
+}
+
+.quiz-card-item {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-left: 4px solid #000;
+    border-radius: 6px;
+    padding: 10px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.quiz-card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.quiz-card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1a202c;
+}
+
+.quiz-card-time {
+    font-size: 11px;
+    color: #4a5568;
+}
+
+.quiz-card-window {
+    font-size: 11px;
+    color: #dd6b20;
+    font-weight: 500;
+}
+
+.btn-remove-quiz {
+    background: #fed7d7;
+    color: #c53030;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-remove-quiz:hover {
+    background: #feb2b2;
+}
+
+/* Tabla de Horario */
+.schedule-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.schedule-table thead {
+    background: #f7fafc;
+}
+
+.schedule-table th {
+    padding: 8px 6px;
+    text-align: center;
+    font-weight: 600;
+    color: #2d3748;
+    border-bottom: 2px solid #e2e8f0;
+    font-size: 11px;
+}
+
+.schedule-table td {
+    padding: 4px 2px;
+    border: 1px solid #e2e8f0;
+    text-align: center;
+}
+
+.schedule-table tr:first-child td {
+    border-top: none;
+}
+
+.schedule-table tr td:first-child {
+    background: #f7fafc;
+    font-weight: 600;
+    color: #4a5568;
+    border-right: 2px solid #e2e8f0;
+    white-space: nowrap;
+}
+
+.schedule-table input {
+    width: 100%;
+    min-width: 60px;
+    padding: 4px 6px;
+    border: 1px solid #cbd5e0;
+    border-radius: 4px;
+    font-size: 10px;
+    text-align: center;
+    background: #fff;
+    color: #2d3748;
+    transition: border-color 0.2s;
+}
+
+.schedule-table input:focus {
+    outline: none;
+    border-color: #000;
+    background: #fff;
+}
+
+.schedule-table input::placeholder {
+    color: #a0aec0;
+    font-size: 9px;
+}
+
+.schedule-table-container {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    margin-top: 12px;
+}
+
+.schedule-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    justify-content: flex-end;
+}
+
+.schedule-actions .btn {
+    padding: 8px 16px;
+    font-size: 12px;
 }
 
 /* Modal Actions */
