@@ -135,7 +135,7 @@ async function loadUsers() {
 
         if (error) {
             console.error("Error cargando usuarios:", error);
-            usersTableBody.innerHTML = '<tr><td colspan="6">Error cargando usuarios</td></tr>';
+            usersTableBody.innerHTML = '<tr><td colspan="7">Error cargando usuarios</td></tr>';
             return;
         }
 
@@ -203,7 +203,7 @@ function renderUsers() {
     }
 
     if (filteredUsers.length === 0) {
-        usersTableBody.innerHTML = '<tr><td colspan="6">No hay usuarios</td></tr>';
+        usersTableBody.innerHTML = '<tr><td colspan="7">No hay usuarios</td></tr>';
         return;
     }
 
@@ -219,7 +219,7 @@ function renderUsers() {
 
     // Sección de licencias infinitas
     if (infiniteLicenses.length > 0 && currentFilter !== 'regular') {
-        html += '<tr class="infinite-section-header"><td colspan="6"><strong>Licencias Infinitas ♾️</strong></td></tr>';
+        html += '<tr class="infinite-section-header"><td colspan="7"><strong>Licencias Infinitas ♾️</strong></td></tr>';
         html += infiniteLicenses.map(user => `
             <tr class="infinite-row">
                 <td>
@@ -241,6 +241,11 @@ function renderUsers() {
                         ${user.estado === 'activo' ? 'Activo' : 'Inactivo'}
                     </span>
                 </td>
+                <td>
+                    ${user.telegram_chat_id
+                ? `<span class="badge active" title="Chat ID: ${user.telegram_chat_id}">📱 Conectado</span>`
+                : `<span class="badge inactive">No vinculado</span>`}
+                </td>
                 <td class="row-actions">
                     ${user.estado === 'activo'
                 ? `<button class="btn btn-danger" onclick="deactivateUser('${user.id}')">Desactivar</button>`
@@ -254,7 +259,7 @@ function renderUsers() {
     // Sección de licencias regulares
     if (regularLicenses.length > 0 && currentFilter !== 'infinite') {
         if (infiniteLicenses.length > 0 && currentFilter === 'all') {
-            html += '<tr class="regular-section-header"><td colspan="6"><strong>Licencias Regulares</strong></td></tr>';
+            html += '<tr class="regular-section-header"><td colspan="7"><strong>Licencias Regulares</strong></td></tr>';
         }
         html += regularLicenses.map(user => `
             <tr>
@@ -276,6 +281,11 @@ function renderUsers() {
                     <span class="badge ${user.estado === 'activo' ? 'active' : 'inactive'}">
                         ${user.estado === 'activo' ? 'Activo' : 'Inactivo'}
                     </span>
+                </td>
+                <td>
+                    ${user.telegram_chat_id
+                ? `<span class="badge active" title="Chat ID: ${user.telegram_chat_id}">📱 Conectado</span>`
+                : `<span class="badge inactive">No vinculado</span>`}
                 </td>
                 <td class="row-actions">
                     ${user.estado === 'activo'
