@@ -232,9 +232,7 @@ function renderUsers() {
                 </td>
                 <td>${formatDate(user.fecha_expiracion)}</td>
                 <td>
-                    ${user.horario_activacion && Object.keys(user.horario_activacion).length > 0
-                ? formatScheduleHuman(user.horario_activacion)
-                : '<span class="badge inactive">Sin horario</span>'}
+                    ${renderScheduleCell(user)}
                 </td>
                 <td>
                     <span class="badge ${user.estado === 'activo' ? 'active' : 'inactive'}">
@@ -276,9 +274,7 @@ function renderUsers() {
                 </td>
                 <td>${formatDate(user.fecha_expiracion)}</td>
                 <td>
-                    ${user.horario_activacion && Object.keys(user.horario_activacion).length > 0
-                ? formatScheduleHuman(user.horario_activacion)
-                : '<span class="badge inactive">Sin horario</span>'}
+                    ${renderScheduleCell(user)}
                 </td>
                 <td>
                     <span class="badge ${user.estado === 'activo' ? 'active' : 'inactive'}">
@@ -316,6 +312,247 @@ function formatDate(dateStr) {
         return dateStr;
     }
 }
+
+// Conteo de clases programadas
+function countTotalClasses(schedule) {
+    if (!schedule || typeof schedule !== 'object') return 0;
+    if (schedule.quizes && Array.isArray(schedule.quizes)) return schedule.quizes.length;
+    let count = 0;
+    const days = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
+    days.forEach(day => {
+        if (Array.isArray(schedule[day])) count += schedule[day].length;
+    });
+    return count;
+}
+
+// Botón para la celda de la tabla
+function renderScheduleCell(user) {
+    const total = countTotalClasses(user.horario_activacion);
+    if (total > 0) {
+        return `
+            <button class="btn btn-secondary btn-sm" onclick="openScheduleEditor('${user.id}')" style="display:inline-flex; align-items:center; gap:6px; padding: 5px 12px; font-weight:600; cursor:pointer;" title="Modificar materias e inputs de horario">
+                <span>📅 Horario</span>
+                <span class="badge active" style="font-size:10px; padding:2px 7px; border-radius:10px;">${total}</span>
+            </button>
+        `;
+    } else {
+        return `
+            <button class="btn btn-secondary btn-sm" onclick="openScheduleEditor('${user.id}')" style="display:inline-flex; align-items:center; gap:5px; padding: 4px 10px; opacity:0.8; font-size:12px; cursor:pointer;" title="Programar materias y horarios">
+                <span>➕ Añadir Horario</span>
+            </button>
+        `;
+    }
+}
+
+// Variables y lógica del editor interactivo de horario
+let currentEditingUserId = null;
+
+function normalizeTimeTo24h(timeStr) {
+    if (!timeStr) return '17:00';
+    timeStr = timeStr.trim().toLowerCase();
+    
+    const match24 = timeStr.match(/^(\d{1,2}):(\d{2})$/);
+    if (match24) {
+        const h = String(parseInt(match24[1])).padStart(2, '0');
+        const m = match24[2];
+        return `${h}:${m}`;
+    }
+
+    const match12 = timeStr.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$/);
+    if (match12) {
+        let h = parseInt(match12[1]);
+        const m = match12[2] || '00';
+        const period = match12[3];
+        if (period === 'pm' && h < 12) h += 12;
+        if (period === 'am' && h === 12) h = 0;
+        return `${String(h).padStart(2, '0')}:${m}`;
+    }
+
+    return '17:00';
+}
+
+window.openScheduleEditor = (userId) => {
+    currentEditingUserId = userId;
+    const user = users.find(u => u.id === userId);
+    if (!user) return;
+
+    const modal = document.getElementById('schedule-modal');
+    const title = document.getElementById('schedule-modal-title');
+    const subtitle = document.getElementById('schedule-modal-subtitle');
+    const container = document.getElementById('schedule-rows-container');
+    const messageEl = document.getElementById('schedule-modal-message');
+
+    title.textContent = `📅 Horario de ${user.usuario || 'Alumno'}`;
+    subtitle.textContent = `Gestiona las materias, horas e inputs de activación para ${user.usuario || 'este alumno'}.`;
+    messageEl.textContent = '';
+    messageEl.className = 'message';
+    container.innerHTML = '';
+
+    const schedule = user.horario_activacion || {};
+    let classesFound = 0;
+
+    const days = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
+    days.forEach(day => {
+        if (schedule[day] && Array.isArray(schedule[day])) {
+            schedule[day].forEach(cls => {
+                let start = '17:00';
+                let end = '18:00';
+                if (cls.hora) {
+                    const parts = cls.hora.split('-').map(p => p.trim());
+                    if (parts[0]) start = normalizeTimeTo24h(parts[0]);
+                    if (parts[1]) end = normalizeTimeTo24h(parts[1]);
+                }
+                addScheduleRow({
+                    day: day,
+                    start: start,
+                    end: end,
+                    subject: cls.asignatura || ''
+                });
+                classesFound++;
+            });
+        }
+    });
+
+    if (classesFound === 0) {
+        addScheduleRow({ day: 'lunes', start: '17:00', end: '18:00', subject: '' });
+    }
+
+    modal.classList.remove('hidden');
+};
+
+window.addScheduleRow = (data = null) => {
+    const container = document.getElementById('schedule-rows-container');
+    const day = data?.day || 'lunes';
+    const start = data?.start || '17:00';
+    const end = data?.end || '18:00';
+    const subject = data?.subject || '';
+
+    const row = document.createElement('div');
+    row.className = 'schedule-card-row';
+    row.style = 'display:flex; gap:10px; align-items:center; background:#f8fafc; padding:12px 14px; border-radius:8px; border:1px solid #e2e8f0; flex-wrap:wrap; box-shadow:0 1px 2px rgba(0,0,0,0.03);';
+
+    row.innerHTML = `
+        <div style="flex: 1.2; min-width: 125px;">
+            <label style="display:block; font-size:11px; font-weight:700; color:#475569; margin-bottom:4px; text-transform:uppercase;">Día</label>
+            <select class="schedule-input-day" style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; background:#fff;">
+                <option value="lunes" ${day === 'lunes' ? 'selected' : ''}>Lunes</option>
+                <option value="martes" ${day === 'martes' ? 'selected' : ''}>Martes</option>
+                <option value="miércoles" ${day === 'miércoles' ? 'selected' : ''}>Miércoles</option>
+                <option value="jueves" ${day === 'jueves' ? 'selected' : ''}>Jueves</option>
+                <option value="viernes" ${day === 'viernes' ? 'selected' : ''}>Viernes</option>
+                <option value="sábado" ${day === 'sábado' ? 'selected' : ''}>Sábado</option>
+                <option value="domingo" ${day === 'domingo' ? 'selected' : ''}>Domingo</option>
+            </select>
+        </div>
+        <div style="flex: 1; min-width: 105px;">
+            <label style="display:block; font-size:11px; font-weight:700; color:#475569; margin-bottom:4px; text-transform:uppercase;">Hora Inicio</label>
+            <input type="time" class="schedule-input-start" value="${escapeHtml(start)}" style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; background:#fff;" required>
+        </div>
+        <div style="flex: 1; min-width: 105px;">
+            <label style="display:block; font-size:11px; font-weight:700; color:#475569; margin-bottom:4px; text-transform:uppercase;">Hora Fin</label>
+            <input type="time" class="schedule-input-end" value="${escapeHtml(end)}" style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; background:#fff;" required>
+        </div>
+        <div style="flex: 2; min-width: 170px;">
+            <label style="display:block; font-size:11px; font-weight:700; color:#475569; margin-bottom:4px; text-transform:uppercase;">Materia / Asignatura</label>
+            <input type="text" class="schedule-input-subject" value="${escapeHtml(subject)}" placeholder="Ej: SOCIALES, QUÍMICA..." style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; background:#fff;" required>
+        </div>
+        <div style="padding-top: 18px;">
+            <button type="button" class="btn btn-danger" onclick="this.closest('.schedule-card-row').remove()" style="padding:8px 12px; background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; border-radius:6px; cursor:pointer;" title="Eliminar materia">🗑️</button>
+        </div>
+    `;
+
+    container.appendChild(row);
+};
+
+window.closeScheduleModal = () => {
+    const modal = document.getElementById('schedule-modal');
+    if (modal) modal.classList.add('hidden');
+    currentEditingUserId = null;
+};
+
+window.clearAllSchedule = async () => {
+    if (!confirm('¿Estás seguro de que deseas borrar TODO el horario de este alumno?')) return;
+    document.getElementById('schedule-rows-container').innerHTML = '';
+};
+
+window.saveUserSchedule = async () => {
+    if (!currentEditingUserId) return;
+
+    const messageEl = document.getElementById('schedule-modal-message');
+    const saveBtn = document.getElementById('btn-save-schedule');
+    const rows = document.querySelectorAll('#schedule-rows-container .schedule-card-row');
+
+    const newHorario = {};
+
+    for (const row of rows) {
+        const day = row.querySelector('.schedule-input-day').value;
+        const start = row.querySelector('.schedule-input-start').value;
+        const end = row.querySelector('.schedule-input-end').value;
+        const subject = row.querySelector('.schedule-input-subject').value.trim();
+
+        if (!start || !end) {
+            messageEl.textContent = 'Por favor ingresa la hora de inicio y fin en todas las materias.';
+            messageEl.className = 'message error';
+            return;
+        }
+
+        if (!subject) {
+            messageEl.textContent = 'Por favor escribe el nombre de la materia en cada fila.';
+            messageEl.className = 'message error';
+            return;
+        }
+
+        if (!newHorario[day]) {
+            newHorario[day] = [];
+        }
+
+        newHorario[day].push({
+            hora: `${start} - ${end}`,
+            asignatura: subject
+        });
+    }
+
+    messageEl.textContent = 'Guardando horario en la base de datos...';
+    messageEl.className = 'message';
+    saveBtn.disabled = true;
+
+    try {
+        const { error } = await supabaseClient
+            .from('usuarios_app')
+            .update({
+                horario_activacion: newHorario,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', currentEditingUserId);
+
+        if (error) {
+            messageEl.textContent = error.message || 'Error guardando horario';
+            messageEl.className = 'message error';
+            saveBtn.disabled = false;
+            return;
+        }
+
+        const u = users.find(x => x.id === currentEditingUserId);
+        if (u) {
+            u.horario_activacion = newHorario;
+        }
+
+        renderUsers();
+        messageEl.textContent = '✅ Horario actualizado exitosamente';
+        messageEl.className = 'message success';
+
+        setTimeout(() => {
+            closeScheduleModal();
+            saveBtn.disabled = false;
+        }, 700);
+
+    } catch (err) {
+        console.error('Error guardando horario:', err);
+        messageEl.textContent = 'Error de conexión al guardar';
+        messageEl.className = 'message error';
+        saveBtn.disabled = false;
+    }
+};
 
 // Formatear horario para humanos
 function formatScheduleHuman(schedule) {

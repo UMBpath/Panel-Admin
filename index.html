@@ -187,6 +187,45 @@
         </div>
     </div>
 
+    <!-- Modal Modificar / Ver Horario -->
+    <div id="schedule-modal" class="modal hidden">
+        <div class="modal-content" style="max-width: 750px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 12px;">
+                <div>
+                    <h2 id="schedule-modal-title" style="margin: 0; color: #1e293b; font-size: 20px;">📅 Horario del Alumno</h2>
+                    <p id="schedule-modal-subtitle" style="margin: 4px 0 0; font-size: 13px; color: #64748b;"></p>
+                </div>
+                <button type="button" class="btn btn-secondary" onclick="closeScheduleModal()" style="font-size: 18px; padding: 4px 10px; line-height: 1;">✕</button>
+            </div>
+
+            <div style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <span style="font-size: 13px; color: #475569;">
+                    Configura cada materia con sus horas para activar las vibraciones en esos bloques:
+                </span>
+                <button type="button" class="btn btn-primary" onclick="addScheduleRow()" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; font-size: 13px;">
+                    ➕ Añadir Materia
+                </button>
+            </div>
+
+            <!-- Contenedor dinámico de filas con inputs -->
+            <div id="schedule-rows-container" style="max-height: 52vh; overflow-y: auto; padding-right: 6px; display: flex; flex-direction: column; gap: 10px;">
+                <!-- Filas agregadas dinámicamente -->
+            </div>
+
+            <div id="schedule-modal-message" class="message" style="margin-top: 15px;"></div>
+
+            <div class="modal-actions" style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eee; padding-top: 15px;">
+                <button type="button" class="btn btn-danger" onclick="clearAllSchedule()" style="background: #ef4444; color: white; padding: 8px 14px; font-size: 13px;">
+                    🗑️ Borrar todo el horario
+                </button>
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeScheduleModal()">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="saveUserSchedule()" id="btn-save-schedule">💾 Guardar Horario</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="app.js"></script>
 </body>
 </html>

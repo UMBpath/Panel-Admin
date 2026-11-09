@@ -905,6 +905,13 @@ tr:hover {
     margin-top: 20px;
 }
 
+.schedule-card-row input:focus,
+.schedule-card-row select:focus {
+    border-color: #2563eb !important;
+    outline: none !important;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
 .modal-actions button {
     width: auto;
 }
