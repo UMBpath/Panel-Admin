@@ -243,7 +243,10 @@ function renderUsers() {
                 </td>
                 <td>
                     ${user.telegram_chat_id
-                ? `<span class="badge active" title="Chat ID: ${user.telegram_chat_id}">📱 Conectado</span>`
+                ? `<div style="display:inline-flex; align-items:center; gap:6px;">
+                        <span class="badge active" title="Chat ID: ${user.telegram_chat_id}">📱 Conectado</span>
+                        <button class="btn btn-secondary" style="padding: 2px 6px; font-size: 10px; cursor: pointer;" onclick="unbindTelegram('${user.id}', '${escapeHtml(user.usuario || '')}')" title="Desvincular iPhone">✕</button>
+                    </div>`
                 : `<span class="badge inactive">No vinculado</span>`}
                 </td>
                 <td class="row-actions">
@@ -284,7 +287,10 @@ function renderUsers() {
                 </td>
                 <td>
                     ${user.telegram_chat_id
-                ? `<span class="badge active" title="Chat ID: ${user.telegram_chat_id}">📱 Conectado</span>`
+                ? `<div style="display:inline-flex; align-items:center; gap:6px;">
+                        <span class="badge active" title="Chat ID: ${user.telegram_chat_id}">📱 Conectado</span>
+                        <button class="btn btn-secondary" style="padding: 2px 6px; font-size: 10px; cursor: pointer;" onclick="unbindTelegram('${user.id}', '${escapeHtml(user.usuario || '')}')" title="Desvincular iPhone">✕</button>
+                    </div>`
                 : `<span class="badge inactive">No vinculado</span>`}
                 </td>
                 <td class="row-actions">
@@ -794,6 +800,27 @@ window.deleteUser = async (id) => {
         await loadUsers();
     } catch (error) {
         console.error("Error borrando usuario:", error);
+        alert("Error de conexión");
+    }
+};
+
+window.unbindTelegram = async (id, userName) => {
+    if (!confirm(`¿Desvincular iPhone de "${userName}"? Tendrá que volver a vincularse en @salva_notif_bot.`)) return;
+
+    try {
+        const { error } = await supabaseClient
+            .from('usuarios_app')
+            .update({ telegram_chat_id: null })
+            .eq('id', id);
+
+        if (error) {
+            alert(error.message);
+            return;
+        }
+
+        await loadUsers();
+    } catch (error) {
+        console.error("Error desvinculando iPhone:", error);
         alert("Error de conexión");
     }
 };
