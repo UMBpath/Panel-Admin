@@ -905,11 +905,30 @@ tr:hover {
     margin-top: 20px;
 }
 
-.schedule-card-row input:focus,
-.schedule-card-row select:focus {
-    border-color: #2563eb !important;
-    outline: none !important;
-    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+.edit-schedule-input {
+    width: 100%;
+    min-width: 75px;
+    padding: 7px 5px;
+    border: 1px solid #cbd5e0;
+    border-radius: 8px;
+    font-size: 11px;
+    text-align: center;
+    background: #fff;
+    color: #1e293b;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+}
+
+.edit-schedule-input:focus {
+    outline: none;
+    border-color: #0284c7;
+    box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2);
+    background: #fff;
+}
+
+.edit-schedule-input::placeholder {
+    color: #94a3b8;
+    font-weight: normal;
 }
 
 .modal-actions button {

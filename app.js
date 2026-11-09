@@ -344,31 +344,59 @@ function renderScheduleCell(user) {
     }
 }
 
-// Variables y lógica del editor interactivo de horario
+// Variables y lógica del editor interactivo de horario (Cuadrícula semanal idéntica)
 let currentEditingUserId = null;
 
-function normalizeTimeTo24h(timeStr) {
-    if (!timeStr) return '17:00';
-    timeStr = timeStr.trim().toLowerCase();
-    
-    const match24 = timeStr.match(/^(\d{1,2}):(\d{2})$/);
-    if (match24) {
-        const h = String(parseInt(match24[1])).padStart(2, '0');
-        const m = match24[2];
-        return `${h}:${m}`;
-    }
+const EDIT_SCHEDULE_DAYS = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
 
-    const match12 = timeStr.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$/);
-    if (match12) {
-        let h = parseInt(match12[1]);
-        const m = match12[2] || '00';
-        const period = match12[3];
-        if (period === 'pm' && h < 12) h += 12;
-        if (period === 'am' && h === 12) h = 0;
-        return `${String(h).padStart(2, '0')}:${m}`;
-    }
+function generateEditScheduleTable() {
+    const tbody = document.getElementById('edit-schedule-table-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
 
-    return '17:00';
+    for (let h = 6; h <= 23; h++) {
+        const period = h < 12 ? 'am' : 'pm';
+        const hour12 = h > 12 ? h - 12 : (h === 0 ? 12 : h);
+        const nextHour = h + 1;
+        const nextPeriod = nextHour < 12 ? 'am' : (nextHour >= 24 ? 'am' : 'pm');
+        const nextHour12 = nextHour > 12 ? (nextHour > 24 ? nextHour - 24 : nextHour - 12) : (nextHour === 12 ? 12 : nextHour);
+        const hourLabel = `${String(hour12).padStart(2, '0')} ${period} - ${String(nextHour12).padStart(2, '0')} ${nextPeriod}`;
+
+        const row = document.createElement('tr');
+        const hourCell = document.createElement('td');
+        hourCell.textContent = hourLabel;
+        row.appendChild(hourCell);
+
+        EDIT_SCHEDULE_DAYS.forEach(day => {
+            const cell = document.createElement('td');
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.placeholder = '--';
+            input.dataset.day = day;
+            input.dataset.h24 = h;
+            input.dataset.hourLabel = hourLabel;
+            input.className = 'edit-schedule-input';
+
+            input.addEventListener('input', () => {
+                if (input.value.trim() && input.value.trim() !== '--') {
+                    input.style.background = '#e0f2fe';
+                    input.style.borderColor = '#0284c7';
+                    input.style.fontWeight = 'bold';
+                    input.style.color = '#0369a1';
+                } else {
+                    input.style.background = '';
+                    input.style.borderColor = '';
+                    input.style.fontWeight = '';
+                    input.style.color = '';
+                }
+            });
+
+            cell.appendChild(input);
+            row.appendChild(cell);
+        });
+
+        tbody.appendChild(row);
+    }
 }
 
 window.openScheduleEditor = (userId) => {
@@ -378,90 +406,61 @@ window.openScheduleEditor = (userId) => {
 
     const modal = document.getElementById('schedule-modal');
     const title = document.getElementById('schedule-modal-title');
-    const subtitle = document.getElementById('schedule-modal-subtitle');
-    const container = document.getElementById('schedule-rows-container');
     const messageEl = document.getElementById('schedule-modal-message');
 
     title.textContent = `📅 Horario de ${user.usuario || 'Alumno'}`;
-    subtitle.textContent = `Gestiona las materias, horas e inputs de activación para ${user.usuario || 'este alumno'}.`;
     messageEl.textContent = '';
     messageEl.className = 'message';
-    container.innerHTML = '';
 
+    generateEditScheduleTable();
+
+    // Poblar las celdas con el horario existente del alumno
     const schedule = user.horario_activacion || {};
-    let classesFound = 0;
 
-    const days = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
-    days.forEach(day => {
-        if (schedule[day] && Array.isArray(schedule[day])) {
-            schedule[day].forEach(cls => {
-                let start = '17:00';
-                let end = '18:00';
-                if (cls.hora) {
-                    const parts = cls.hora.split('-').map(p => p.trim());
-                    if (parts[0]) start = normalizeTimeTo24h(parts[0]);
-                    if (parts[1]) end = normalizeTimeTo24h(parts[1]);
+    const dayNormalizeMap = {
+        'lunes': 'lunes',
+        'martes': 'martes',
+        'miercoles': 'miércoles',
+        'miércoles': 'miércoles',
+        'jueves': 'jueves',
+        'viernes': 'viernes',
+        'sabado': 'sábado',
+        'sábado': 'sábado',
+        'domingo': 'domingo'
+    };
+
+    for (const [rawDay, classes] of Object.entries(schedule)) {
+        const normDay = dayNormalizeMap[rawDay.toLowerCase()] || rawDay.toLowerCase();
+        if (Array.isArray(classes)) {
+            classes.forEach(cls => {
+                if (!cls.hora) return;
+                const startStr = cls.hora.split('-')[0].trim();
+                let startH = parseInt(startStr.split(':')[0]);
+                if (isNaN(startH)) {
+                    const match = startStr.match(/^(\d{1,2})\s*(am|pm)$/i);
+                    if (match) {
+                        let h = parseInt(match[1]);
+                        if (match[2].toLowerCase() === 'pm' && h < 12) h += 12;
+                        if (match[2].toLowerCase() === 'am' && h === 12) h = 0;
+                        startH = h;
+                    }
                 }
-                addScheduleRow({
-                    day: day,
-                    start: start,
-                    end: end,
-                    subject: cls.asignatura || ''
-                });
-                classesFound++;
+
+                if (!isNaN(startH)) {
+                    const input = document.querySelector(`#edit-schedule-table input[data-day="${normDay}"][data-h24="${startH}"]`);
+                    if (input) {
+                        input.value = cls.asignatura || 'CLASE';
+                        input.style.background = '#e0f2fe';
+                        input.style.borderColor = '#0284c7';
+                        input.style.fontWeight = 'bold';
+                        input.style.color = '#0369a1';
+                    }
+                }
             });
         }
-    });
-
-    if (classesFound === 0) {
-        addScheduleRow({ day: 'lunes', start: '17:00', end: '18:00', subject: '' });
     }
 
     modal.classList.remove('hidden');
-};
-
-window.addScheduleRow = (data = null) => {
-    const container = document.getElementById('schedule-rows-container');
-    const day = data?.day || 'lunes';
-    const start = data?.start || '17:00';
-    const end = data?.end || '18:00';
-    const subject = data?.subject || '';
-
-    const row = document.createElement('div');
-    row.className = 'schedule-card-row';
-    row.style = 'display:flex; gap:10px; align-items:center; background:#f8fafc; padding:12px 14px; border-radius:8px; border:1px solid #e2e8f0; flex-wrap:wrap; box-shadow:0 1px 2px rgba(0,0,0,0.03);';
-
-    row.innerHTML = `
-        <div style="flex: 1.2; min-width: 125px;">
-            <label style="display:block; font-size:11px; font-weight:700; color:#475569; margin-bottom:4px; text-transform:uppercase;">Día</label>
-            <select class="schedule-input-day" style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; background:#fff;">
-                <option value="lunes" ${day === 'lunes' ? 'selected' : ''}>Lunes</option>
-                <option value="martes" ${day === 'martes' ? 'selected' : ''}>Martes</option>
-                <option value="miércoles" ${day === 'miércoles' ? 'selected' : ''}>Miércoles</option>
-                <option value="jueves" ${day === 'jueves' ? 'selected' : ''}>Jueves</option>
-                <option value="viernes" ${day === 'viernes' ? 'selected' : ''}>Viernes</option>
-                <option value="sábado" ${day === 'sábado' ? 'selected' : ''}>Sábado</option>
-                <option value="domingo" ${day === 'domingo' ? 'selected' : ''}>Domingo</option>
-            </select>
-        </div>
-        <div style="flex: 1; min-width: 105px;">
-            <label style="display:block; font-size:11px; font-weight:700; color:#475569; margin-bottom:4px; text-transform:uppercase;">Hora Inicio</label>
-            <input type="time" class="schedule-input-start" value="${escapeHtml(start)}" style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; background:#fff;" required>
-        </div>
-        <div style="flex: 1; min-width: 105px;">
-            <label style="display:block; font-size:11px; font-weight:700; color:#475569; margin-bottom:4px; text-transform:uppercase;">Hora Fin</label>
-            <input type="time" class="schedule-input-end" value="${escapeHtml(end)}" style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; background:#fff;" required>
-        </div>
-        <div style="flex: 2; min-width: 170px;">
-            <label style="display:block; font-size:11px; font-weight:700; color:#475569; margin-bottom:4px; text-transform:uppercase;">Materia / Asignatura</label>
-            <input type="text" class="schedule-input-subject" value="${escapeHtml(subject)}" placeholder="Ej: SOCIALES, QUÍMICA..." style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; background:#fff;" required>
-        </div>
-        <div style="padding-top: 18px;">
-            <button type="button" class="btn btn-danger" onclick="this.closest('.schedule-card-row').remove()" style="padding:8px 12px; background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; border-radius:6px; cursor:pointer;" title="Eliminar materia">🗑️</button>
-        </div>
-    `;
-
-    container.appendChild(row);
 };
 
 window.closeScheduleModal = () => {
@@ -470,9 +469,16 @@ window.closeScheduleModal = () => {
     currentEditingUserId = null;
 };
 
-window.clearAllSchedule = async () => {
-    if (!confirm('¿Estás seguro de que deseas borrar TODO el horario de este alumno?')) return;
-    document.getElementById('schedule-rows-container').innerHTML = '';
+window.clearEditScheduleTable = () => {
+    if (!confirm('¿Deseas limpiar todos los cuadros de horario de este alumno?')) return;
+    const inputs = document.querySelectorAll('#edit-schedule-table input');
+    inputs.forEach(input => {
+        input.value = '';
+        input.style.background = '';
+        input.style.borderColor = '';
+        input.style.fontWeight = '';
+        input.style.color = '';
+    });
 };
 
 window.saveUserSchedule = async () => {
@@ -480,37 +486,28 @@ window.saveUserSchedule = async () => {
 
     const messageEl = document.getElementById('schedule-modal-message');
     const saveBtn = document.getElementById('btn-save-schedule');
-    const rows = document.querySelectorAll('#schedule-rows-container .schedule-card-row');
+    const inputs = document.querySelectorAll('#edit-schedule-table input');
 
     const newHorario = {};
 
-    for (const row of rows) {
-        const day = row.querySelector('.schedule-input-day').value;
-        const start = row.querySelector('.schedule-input-start').value;
-        const end = row.querySelector('.schedule-input-end').value;
-        const subject = row.querySelector('.schedule-input-subject').value.trim();
+    inputs.forEach(input => {
+        const val = input.value.trim();
+        if (val && val !== '--') {
+            const day = input.dataset.day;
+            const h = parseInt(input.dataset.h24);
+            const nextH = h + 1;
+            const horaStr = `${String(h).padStart(2, '0')}:00 - ${String(nextH).padStart(2, '0')}:00`;
 
-        if (!start || !end) {
-            messageEl.textContent = 'Por favor ingresa la hora de inicio y fin en todas las materias.';
-            messageEl.className = 'message error';
-            return;
+            if (!newHorario[day]) {
+                newHorario[day] = [];
+            }
+
+            newHorario[day].push({
+                hora: horaStr,
+                asignatura: val
+            });
         }
-
-        if (!subject) {
-            messageEl.textContent = 'Por favor escribe el nombre de la materia en cada fila.';
-            messageEl.className = 'message error';
-            return;
-        }
-
-        if (!newHorario[day]) {
-            newHorario[day] = [];
-        }
-
-        newHorario[day].push({
-            hora: `${start} - ${end}`,
-            asignatura: subject
-        });
-    }
+    });
 
     messageEl.textContent = 'Guardando horario en la base de datos...';
     messageEl.className = 'message';
@@ -544,7 +541,7 @@ window.saveUserSchedule = async () => {
         setTimeout(() => {
             closeScheduleModal();
             saveBtn.disabled = false;
-        }, 700);
+        }, 600);
 
     } catch (err) {
         console.error('Error guardando horario:', err);
